@@ -19,7 +19,7 @@ BASE_URL = "https://games.roblox.com/v1/games?universeIds="
 batch_size = 100
 
 # Concurrent Requests (Default: 100)
-current_async_requests = 100
+concurrent_requests = 100
 
 # Sample size (Default: 10)
 sample_size = 100
@@ -36,7 +36,6 @@ generate_benchmark_report = True
 Only change settings below this point if
 you know what you're doing.
 '''
-
 
 # -------- [ Benchmark Output ] ---------
 
@@ -102,7 +101,7 @@ RESET = '\033[0m'
 # ----- [ ----------------------- ] -----
 
 async def fetch_uids(session, batch_start, batch_end):
-    global last_request_time, rate_limit_delay, suspected_rate_limit_count, average_response_time, response_time_count, current_async_requests, loss_count, response_time_saved, confirmed_rate_limit_count, httpx_lost_count, response_time_threshold, response_time_threshold_multiplier
+    global last_request_time, rate_limit_delay, suspected_rate_limit_count, average_response_time, response_time_count, concurrent_requests, loss_count, response_time_saved, confirmed_rate_limit_count, httpx_lost_count, response_time_threshold, response_time_threshold_multiplier
 
     universe_ids = ",".join(str(i) for i in range(batch_start, batch_end))
     url = BASE_URL + universe_ids
@@ -147,12 +146,12 @@ async def fetch_uids(session, batch_start, batch_end):
 
 
 async def main():
-    global gather_time_saved, current_async_requests, progress_bar, start_id, suspected_rate_limit_count, rate_limit_delay, average_response_time, response_time_threshold_multiplier, previous_uids_per_second, batch_size, rate_limit_delay, httpx_lost_count, confirmed_rate_limit_count
+    global gather_time_saved, concurrent_requests, progress_bar, start_id, suspected_rate_limit_count, rate_limit_delay, average_response_time, response_time_threshold_multiplier, previous_uids_per_second, batch_size, rate_limit_delay, httpx_lost_count, confirmed_rate_limit_count
 
     print(f"{UNDERLINE}{GOLDEN}Benchmarking Roblox API Endpoint{RESET}:")
     print(f"{GRAY}- Targetting {BASE_URL}{RESET}")
-    print(f"{GRAY}- {batch_size} UIDs/Url at {current_async_requests} cReqs{RESET}")
-    print(f"{GRAY}- Taking {sample_size} samples ({(batch_size*current_async_requests*sample_size):,} total UIDs){RESET}")
+    print(f"{GRAY}- {batch_size} UIDs/Url at {concurrent_requests} cReqs{RESET}")
+    print(f"{GRAY}- Taking {sample_size} samples ({(batch_size*concurrent_requests*sample_size):,} total UIDs){RESET}")
     print(f"{GRAY}- Waiting at least {rate_limit_delay} seconds before returning data{RESET}")
 
     await asyncio.sleep(2)
@@ -167,9 +166,9 @@ async def main():
 
             start_id = 0
 
-            progress_bar = tqdm(total=current_async_requests, unit="req", desc=f"Running Sample #{(current_sample+1):02} with Batch Size of {(batch_size*current_async_requests):,}")
+            progress_bar = tqdm(total=concurrent_requests, unit="req", desc=f"Running Sample #{(current_sample+1):02} with Batch Size of {(batch_size*concurrent_requests):,}")
 
-            for _ in range(current_async_requests):
+            for _ in range(concurrent_requests):
                 batch_end = start_id + batch_size
                 tasks.append(fetch_uids(session, batch_start=start_id, batch_end=batch_end))
                 start_id += batch_size
@@ -182,11 +181,11 @@ async def main():
 
             gather_time_saved.append(elapsed_time)
 
-            uids_per_second = (batch_size*current_async_requests)/elapsed_time
+            uids_per_second = (batch_size*concurrent_requests)/elapsed_time
 
             gathering_uids_per_second_saved.append(uids_per_second)
 
-            uids_per_second_saved.append((batch_size*current_async_requests)/average_response_time)
+            uids_per_second_saved.append((batch_size*concurrent_requests)/average_response_time)
 
         # Calculate average UID/s
         average_uids_per_second = round(sum(uids_per_second_saved) / len(uids_per_second_saved), 3)
@@ -208,7 +207,7 @@ async def main():
         print("Requests Results:")
         print(f"- Encountered an unusual response time {suspected_rate_limit_count} times")
         print(f"- Confirmed rate limiting {confirmed_rate_limit_count} times")
-        print(f"- Lost {loss_count} UIDs ({round((loss_count/(batch_size*current_async_requests*sample_size))*100, 2)}%) to rate limiting")
+        print(f"- Lost {loss_count} UIDs ({round((loss_count/(batch_size*concurrent_requests*sample_size))*100, 2)}%) to rate limiting")
         print(f"- Lost {httpx_lost_count} UIDs to HTTPX errors")
 
         benchmark_time_elapsed = time.time() - benchmark_time
