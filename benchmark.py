@@ -16,7 +16,7 @@ by nouhidev
 BASE_URL = "https://games.roblox.com/v1/games?universeIds="
 
 # UIDs/Url (Default: 100)
-batch_size = 20
+batch_size = 100
 
 # Concurrent Requests (Default: 100)
 current_async_requests = 100
@@ -122,9 +122,12 @@ async def fetch_uids(session, batch_start, batch_end):
 
     response_time_threshold = average_response_time * response_time_threshold_multiplier
 
-    if response.status_code == 503:
-        loss_count += batch_size
-        confirmed_rate_limit_count += 1
+    try:
+        if response.status_code == 503:
+            loss_count += batch_size
+            confirmed_rate_limit_count += 1
+    except:
+        pass
 
     if response_time > response_time_threshold:
         suspected_rate_limit_count += 1
@@ -205,7 +208,7 @@ async def main():
         print("Requests Results:")
         print(f"- Encountered an unusual response time {suspected_rate_limit_count} times")
         print(f"- Confirmed rate limiting {confirmed_rate_limit_count} times")
-        print(f"- Lost {loss_count} UIDs ({round((loss_count/(batch_size*current_async_requests*sample_size))*100, 2)})to rate limiting")
+        print(f"- Lost {loss_count} UIDs ({round((loss_count/(batch_size*current_async_requests*sample_size))*100, 2)}%) to rate limiting")
         print(f"- Lost {httpx_lost_count} UIDs to HTTPX errors")
 
         benchmark_time_elapsed = time.time() - benchmark_time
