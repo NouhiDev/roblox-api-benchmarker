@@ -16,7 +16,7 @@ by nouhidev
 BASE_URL = "https://games.roblox.com/v1/games?universeIds="
 
 # UIDs/Url (Default: 100)
-batch_size = 80
+batch_size = 100
 
 # Concurrent Requests (Default: 100)
 current_async_requests = 100
@@ -154,6 +154,8 @@ async def main():
 
     await asyncio.sleep(2)
 
+    benchmark_time = time.time()
+
     async with httpx.AsyncClient(http2=True, limits=httpx.Limits(max_connections=None, max_keepalive_connections=0)) as session:
         for current_sample in range(sample_size):
             tasks = []
@@ -203,8 +205,12 @@ async def main():
         print("Requests Results:")
         print(f"- Encountered an unusual response time {suspected_rate_limit_count} times")
         print(f"- Confirmed rate limiting {confirmed_rate_limit_count} times")
-        print(f"- Lost {loss_count} UIDs to rate limiting")
+        print(f"- Lost {loss_count} UIDs ({round((loss_count/(batch_size*current_async_requests*sample_size))*100, 2)})to rate limiting")
         print(f"- Lost {httpx_lost_count} UIDs to HTTPX errors")
+
+        benchmark_time_elapsed = time.time() - benchmark_time
+
+        print(f"This benchmark took {round(benchmark_time_elapsed, 2)} seconds")
 
         if generate_benchmark_report:
             # Create benchmark-results folder if it doen't exist
