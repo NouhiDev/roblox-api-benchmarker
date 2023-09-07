@@ -12,4 +12,4 @@ Benchmarks Roblox API endpoints with adjustable parameters.
 1. Clone the repository
 2. Install all non-default modules (tqdm and httpx[http2])
 3. Adjust the parameters at the top of the benchmark.py file
-4. Run the script using a Python Interpreter
+4. Start the run.bat file
