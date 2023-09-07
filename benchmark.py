@@ -16,13 +16,13 @@ by nouhidev
 BASE_URL = "https://games.roblox.com/v1/games?universeIds="
 
 # UIDs/Url (Default: 100)
-batch_size = 100
+batch_size = 20
 
 # Concurrent Requests (Default: 100)
 current_async_requests = 100
 
 # Sample size (Default: 10)
-sample_size = 10
+sample_size = 100
 
 # Amount of seconds that have to be passed before returning the data (Default: 3)
 rate_limit_delay = 3
@@ -102,7 +102,7 @@ RESET = '\033[0m'
 # ----- [ ----------------------- ] -----
 
 async def fetch_uids(session, batch_start, batch_end):
-    global last_request_time, rate_limit_delay, suspected_rate_limit_count, average_response_time, response_time_count, current_async_requests, loss_count, response_time_saved, confirmed_rate_limit_count, httpx_lost_count
+    global last_request_time, rate_limit_delay, suspected_rate_limit_count, average_response_time, response_time_count, current_async_requests, loss_count, response_time_saved, confirmed_rate_limit_count, httpx_lost_count, response_time_threshold, response_time_threshold_multiplier
 
     universe_ids = ",".join(str(i) for i in range(batch_start, batch_end))
     url = BASE_URL + universe_ids
